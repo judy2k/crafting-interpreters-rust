@@ -3,6 +3,9 @@ use std::{env, path::Path};
 use eyre::eyre;
 
 mod lox;
+mod scanner;
+mod token;
+mod token_type;
 
 fn main() -> eyre::Result<()> {
     let args: Vec<String> = env::args().collect();

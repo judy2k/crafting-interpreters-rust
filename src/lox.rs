@@ -1,6 +1,6 @@
 use std::{
     fs::read_to_string,
-    io::{self, stderr, Error, Write},
+    io::{self, Error, Write},
     path::Path,
 };
 

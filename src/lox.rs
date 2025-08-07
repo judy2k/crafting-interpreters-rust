@@ -42,7 +42,7 @@ impl Lox {
     }
 
     fn report(&self, line: usize, loc: &str, message: &str) {
-        eprintln!("[line {}] Error {} : {}", line, loc, message);
+        eprintln!("[line {line}] Error {loc} : {message}");
     }
 }
 

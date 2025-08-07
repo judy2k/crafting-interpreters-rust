@@ -64,7 +64,7 @@ impl Scanner {
     }
 
     fn add_token(&mut self, t: TokenType) {
-        println!("Add token: {:?}", t);
+        println!("Add token: {t:?}");
         self.add_token_literal(t, Value::None);
     }
 
@@ -172,7 +172,7 @@ impl Scanner {
             self.advance();
         }
         let text: String = self.source[self.start..self.current].iter().collect();
-        println!("Identifier text: {:?}", text);
+        println!("Identifier text: {text:?}");
         let tt = keywords().get(&text).unwrap_or(&Identifier);
         self.add_token(*tt);
     }
@@ -237,8 +237,8 @@ fn is_alpha(c: char) -> bool {
 }
 
 fn is_alpha_numeric(c: char) -> bool {
-    let result = c.is_ascii_alphanumeric() || c == '_';
-    result
+    
+    c.is_ascii_alphanumeric() || c == '_'
 }
 
 #[cfg(test)]

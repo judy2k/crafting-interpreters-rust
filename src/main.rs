@@ -10,7 +10,7 @@ mod token_type;
 fn main() -> eyre::Result<()> {
     let args: Vec<String> = env::args().collect();
     let mut lox = lox::Lox::new();
-    println!("Args: {:?}", args);
+    println!("Args: {args:?}");
 
     if args.len() > 2 {
         return Err(eyre!("Usage lox [script]"));

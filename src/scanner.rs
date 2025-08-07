@@ -237,14 +237,13 @@ fn is_alpha(c: char) -> bool {
 }
 
 fn is_alpha_numeric(c: char) -> bool {
-    
     c.is_ascii_alphanumeric() || c == '_'
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{lox::Lox};
+    use crate::lox::Lox;
 
     #[test]
     fn test_identifier() {
@@ -252,6 +251,6 @@ mod tests {
         let t2 = Token::new(Identifier, "thing".into(), Value::None, 1);
         let tokens = scan_tokens(&mut Lox::new(), "or thing");
         assert_eq!(tokens[0], t1);
-        assert_eq!(tokens[1], t2);        
+        assert_eq!(tokens[1], t2);
     }
 }

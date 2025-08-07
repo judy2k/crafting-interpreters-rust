@@ -1,6 +1,6 @@
 use std::{
     fs::read_to_string,
-    io::{self, Error, Write},
+    io::{self, stderr, Error, Write},
     path::Path,
 };
 
@@ -36,6 +36,14 @@ impl Lox {
     }
 
     fn run(&mut self, code: &str) {}
+
+    pub fn error(&self, line: usize, message: &str) {
+        self.report(line, "", message)
+    }
+
+    fn report(&self, line: usize, loc: &str, message: &str) {
+        eprintln!("[line {}] Error {} : {}", line, loc, message);
+    }
 }
 
 #[cfg(test)]

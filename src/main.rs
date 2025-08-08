@@ -2,6 +2,8 @@ use std::{env, path::Path};
 
 use eyre::eyre;
 
+mod ast_gen;
+mod expr;
 mod lox;
 mod scanner;
 mod token;

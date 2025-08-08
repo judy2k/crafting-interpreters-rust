@@ -35,7 +35,7 @@ impl Lox {
         }
     }
 
-    fn run(&mut self, code: &str) {}
+    fn run(&mut self, _code: &str) {}
 
     pub fn error(&self, line: usize, message: &str) {
         self.report(line, "", message)

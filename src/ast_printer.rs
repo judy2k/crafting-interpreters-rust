@@ -36,10 +36,9 @@ impl ast::Visitor<String> for AstPrinter {
 #[cfg(test)]
 mod tests {
     use crate::{
-        Value,
         ast::{Expr, Visitor},
         ast_printer::AstPrinter,
-        token::Token,
+        token::{Token, Value},
         token_type::TokenType,
     };
 

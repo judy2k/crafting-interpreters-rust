@@ -3,7 +3,9 @@ use std::{env, path::Path};
 use eyre::eyre;
 
 use crate::{
-    ast::{Expr, Visitor}, ast_printer::AstPrinter, token::{Token, Value}
+    ast::{Expr, Visitor},
+    ast_printer::AstPrinter,
+    token::{Token, Value},
 };
 
 mod ast;
@@ -38,6 +40,6 @@ fn main() -> eyre::Result<()> {
         operator: Token::new(token_type::TokenType::Star, "*".into(), Value::None, 1),
         right: Box::new(Expr::Grouping(Box::new(Expr::Literal((45.67).into())))),
     };
-    println!("{}", AstPrinter{}.visit_expr(&e));
+    println!("{}", AstPrinter {}.visit_expr(&e));
     Ok(())
 }

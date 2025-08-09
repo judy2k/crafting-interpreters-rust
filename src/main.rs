@@ -3,6 +3,7 @@ use std::{env, path::Path};
 use eyre::eyre;
 
 mod ast_gen;
+mod ast_printer;
 mod expr;
 mod lox;
 mod scanner;

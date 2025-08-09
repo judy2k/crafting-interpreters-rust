@@ -57,10 +57,10 @@ impl From<Option<f64>> for Value {
 
 #[derive(Debug, PartialEq)]
 pub struct Token {
-    token_type: TokenType,
-    lexeme: String,
-    literal: Value,
-    line: usize,
+    pub token_type: TokenType,
+    pub lexeme: String,
+    pub literal: Value,
+    pub line: usize,
 }
 
 impl Token {

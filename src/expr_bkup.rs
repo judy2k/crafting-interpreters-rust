@@ -5,15 +5,14 @@ enum Expr {
     Binary(Binary),
 }
 
-struct Assign {
-    name: Token,
-    value: Box<Expr>,
-}
-struct Binary {}
-
 trait Visitor<R> {
     fn visitAssignExpr(&self, expr: &Assign) -> R;
     fn visitBinaryExpr(&self, expr: &Binary) -> R;
+}
+
+struct Assign {
+    name: Token,
+    value: Box<Expr>,
 }
 
 impl Assign {
@@ -23,6 +22,8 @@ impl Assign {
         return visitor.visitAssignExpr(self);
     }
 }
+
+struct Binary {}
 
 impl Binary {
     fn accept<R>(&mut self, visitor: impl Visitor<R>) -> R {

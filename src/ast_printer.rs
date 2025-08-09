@@ -32,3 +32,27 @@ impl ast::Visitor<String> for AstPrinter {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        Value,
+        ast::{Expr, Visitor},
+        ast_printer::AstPrinter,
+        token::Token,
+        token_type::TokenType,
+    };
+
+    #[test]
+    fn test_example() {
+        let e = Expr::Binary {
+            left: Box::new(Expr::Unary {
+                operator: Token::new(TokenType::Minus, "-".into(), Value::None, 1),
+                right: Box::new(Expr::Literal(123_f64.into())),
+            }),
+            operator: Token::new(TokenType::Star, "*".into(), Value::None, 1),
+            right: Box::new(Expr::Grouping(Box::new(Expr::Literal((45.67).into())))),
+        };
+        assert_eq!("(* (- 123) (group 45.67))", AstPrinter {}.visit_expr(&e));
+    }
+}

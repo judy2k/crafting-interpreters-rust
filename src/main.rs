@@ -1,6 +1,4 @@
-use std::{env, path::Path};
 
-use eyre::eyre;
 
 use crate::{
     ast::{Expr, Visitor},

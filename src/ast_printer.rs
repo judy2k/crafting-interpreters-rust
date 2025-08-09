@@ -5,13 +5,13 @@ pub(crate) struct AstPrinter;
 impl AstPrinter {
     fn parenthesize(&self, name: &str, exprs: &[&Expr]) -> String {
         let mut result = String::new();
-        result.push_str("(");
+        result.push('(');
         result.push_str(name);
         for expr in exprs.iter() {
-            result.push_str(" ");
+            result.push(' ');
             result.push_str(&self.visit_expr(expr));
         }
-        result.push_str(")");
+        result.push(')');
         result
     }
 }

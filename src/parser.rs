@@ -43,11 +43,7 @@ impl<'a> Parser<'a> {
         while self.token_match(&[BangEqual, EqualEqual]) {
             let operator = self.previous().clone();
             let right = self.comparison()?;
-            expr = Expr::Binary {
-                left: Box::new(expr),
-                operator,
-                right: Box::new(right),
-            };
+            expr = Expr::binary(expr, operator, right);
         }
 
         Ok(expr)
@@ -59,11 +55,7 @@ impl<'a> Parser<'a> {
         while self.token_match(&[Greater, GreaterEqual, Less, LessEqual]) {
             let operator = self.previous().clone();
             let right = self.term()?;
-            expr = Expr::Binary {
-                left: Box::new(expr),
-                operator,
-                right: Box::new(right),
-            };
+            expr = Expr::binary(expr, operator, right);
         }
         Ok(expr)
     }
@@ -73,11 +65,7 @@ impl<'a> Parser<'a> {
         while self.token_match(&[Minus, Plus]) {
             let operator = self.previous().clone();
             let right = self.factor()?;
-            expr = Expr::Binary {
-                left: Box::new(expr),
-                operator,
-                right: Box::new(right),
-            };
+            expr = Expr::binary(expr, operator, right);
         }
         Ok(expr)
     }
@@ -87,11 +75,7 @@ impl<'a> Parser<'a> {
         while self.token_match(&[Slash, Star]) {
             let operator = self.previous().clone();
             let right = self.unary()?;
-            expr = Expr::Binary {
-                left: Box::new(expr),
-                operator,
-                right: Box::new(right),
-            };
+            expr = Expr::binary(expr, operator, right);
         }
         Ok(expr)
     }
@@ -100,37 +84,33 @@ impl<'a> Parser<'a> {
         if self.token_match(&[Bang, Minus]) {
             let operator = self.previous().clone();
             let right = self.unary()?;
-            return Ok(Expr::Unary {
-                operator,
-                right: Box::new(right),
-            });
+            return Ok(Expr::unary(operator, right));
         }
         self.primary()
     }
 
     fn primary(&mut self) -> ExprResult {
         if self.token_match(&[False]) {
-            return Ok(Expr::Literal(false.into()));
+            return Ok(Expr::literal(false));
         }
         if self.token_match(&[True]) {
-            return Ok(Expr::Literal(true.into()));
+            return Ok(Expr::literal(true));
         }
         if self.token_match(&[Nil]) {
-            return Ok(Expr::Literal(Value::None));
+            return Ok(Expr::literal(Value::None));
         }
 
         if self.token_match(&[Number, String]) {
-            return Ok(Expr::Literal(self.previous().literal.clone()));
+            return Ok(Expr::literal(self.previous().literal.clone()));
         }
 
         if self.token_match(&[LeftParen]) {
             let expr = self.expression()?;
             self.consume(RightParen, "Expect ')' after expression.")?;
-            return Ok(Expr::Grouping(Box::new(expr)));
+            return Ok(Expr::grouping(expr));
         }
 
-       
-        Err(self.error(& self.peek().clone(), "Expect expression."))
+        Err(self.error(&self.peek().clone(), "Expect expression."))
     }
 
     // -------------------------------------------------------------------------
@@ -237,6 +217,4 @@ mod tests {
         assert!(lox.had_error);
         assert!(expr.is_none());
     }
-
-
 }

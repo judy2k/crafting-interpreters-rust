@@ -30,8 +30,8 @@ impl Expr {
     pub fn grouping(expr: Expr) -> Self {
         Self::Grouping(Box::new(expr))
     }
-    pub fn literal(value: Value) -> Self {
-        Self::Literal(value)
+    pub fn literal(value: impl Into<Value>) -> Self {
+        Self::Literal(value.into())
     }
     pub fn unary(operator: Token, right: Expr) -> Self {
         Self::Unary {

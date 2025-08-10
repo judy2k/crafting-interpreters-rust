@@ -5,7 +5,8 @@ use std::{
 };
 
 use crate::{
-    ast::Expr, ast_printer::AstPrinter, parser::parse, scanner::scan_tokens, token::Token, token_type::TokenType
+    ast::Expr, ast_printer::AstPrinter, parser::parse, scanner::scan_tokens, token::Token,
+    token_type::TokenType,
 };
 
 #[derive(Default, Debug)]

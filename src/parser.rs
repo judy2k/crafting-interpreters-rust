@@ -16,12 +16,12 @@ type ExprResult = Result<Expr, ParseError>;
 #[derive(Debug)]
 pub struct Parser<'a> {
     lox: &'a mut Lox,
-    tokens: Vec<Token>,
+    tokens: &'a [Token],
     current: usize,
 }
 
 impl<'a> Parser<'a> {
-    fn new(lox: &'a mut Lox, tokens: Vec<Token>) -> Self {
+    fn new(lox: &'a mut Lox, tokens: &'a [Token]) -> Self {
         Self {
             lox,
             tokens,
@@ -29,7 +29,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse(lox: &'a mut Lox, tokens: Vec<Token>) -> Option<Expr> {
+    fn parse(lox: &'a mut Lox, tokens: &'a [Token]) -> Option<Expr> {
         Self::new(lox, tokens).expression().ok()
     }
 
@@ -180,7 +180,7 @@ impl<'a> Parser<'a> {
 }
 
 pub fn parse(lox: &mut Lox, tokens: Vec<Token>) -> Option<Expr> {
-    Parser::parse(lox, tokens)
+    Parser::parse(lox, &tokens)
 }
 
 #[cfg(test)]

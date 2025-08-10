@@ -5,13 +5,12 @@ use std::{
 };
 
 use crate::{
-    ast_printer::AstPrinter, parser::Parser, scanner::scan_tokens, token::Token,
-    token_type::TokenType,
+    ast::Expr, ast_printer::AstPrinter, parser::parse, scanner::scan_tokens, token::Token, token_type::TokenType
 };
 
 #[derive(Default, Debug)]
 pub struct Lox {
-    had_error: bool,
+    pub had_error: bool,
 }
 
 impl Lox {
@@ -43,7 +42,7 @@ impl Lox {
 
     fn run(&mut self, code: &str) {
         let tokens = scan_tokens(self, code);
-        let expression = Parser::parse(self, tokens);
+        let expression = parse(self, tokens);
         if self.had_error {
             return;
         }
@@ -54,20 +53,30 @@ impl Lox {
         );
     }
 
-    pub fn error(&self, line: usize, message: &str) {
+    pub(crate) fn error(&mut self, line: usize, message: &str) {
         self.report(line, "", message)
     }
 
-    fn report(&self, line: usize, loc: &str, message: &str) {
+    fn report(&mut self, line: usize, loc: &str, message: &str) {
         eprintln!("[line {line}] Error {loc} : {message}");
+        self.had_error = true;
     }
 
-    pub fn parse_error(&self, token: &Token, message: &str) {
+    pub(crate) fn parse_error(&mut self, token: &Token, message: &str) {
         if token.token_type == TokenType::EOF {
             self.report(token.line, " at end", message);
         } else {
             self.report(token.line, &format!(" at '{}'", token.lexeme), message);
         }
+    }
+
+    pub fn scan_tokens(&mut self, code: &str) -> Vec<Token> {
+        scan_tokens(self, code)
+    }
+
+    pub fn parse_code(&mut self, code: &str) -> Option<Expr> {
+        let tokens = scan_tokens(self, code);
+        parse(self, tokens)
     }
 }
 

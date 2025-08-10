@@ -6,7 +6,7 @@ use crate::token_type::TokenType::{self, *};
 use crate::{ast::Expr, token::Token};
 
 #[derive(Error, Debug)]
-pub enum ParseError {
+enum ParseError {
     #[error("An error occured with parsing.")]
     Error,
 }
@@ -15,13 +15,13 @@ type ExprResult = Result<Expr, ParseError>;
 
 #[derive(Debug)]
 pub struct Parser<'a> {
-    lox: &'a Lox,
+    lox: &'a mut Lox,
     tokens: Vec<Token>,
     current: usize,
 }
 
 impl<'a> Parser<'a> {
-    fn new(lox: &'a Lox, tokens: Vec<Token>) -> Self {
+    fn new(lox: &'a mut Lox, tokens: Vec<Token>) -> Self {
         Self {
             lox,
             tokens,
@@ -29,9 +29,8 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse(lox: &'a Lox, tokens: Vec<Token>) -> Option<Expr> {
-        let mut parser = Self::new(lox, tokens);
-        parser.expression().ok()
+    fn parse(lox: &'a mut Lox, tokens: Vec<Token>) -> Option<Expr> {
+        Self::new(lox, tokens).expression().ok()
     }
 
     fn expression(&mut self) -> ExprResult {
@@ -126,11 +125,12 @@ impl<'a> Parser<'a> {
 
         if self.token_match(&[LeftParen]) {
             let expr = self.expression()?;
-            self.consume(RightParen, "Expect '(' after expression.")?;
+            self.consume(RightParen, "Expect ')' after expression.")?;
             return Ok(Expr::Grouping(Box::new(expr)));
         }
 
-        Err(self.error(self.peek(), "Expect expression."))
+       
+        Err(self.error(& self.peek().clone(), "Expect expression."))
     }
 
     // -------------------------------------------------------------------------
@@ -139,9 +139,7 @@ impl<'a> Parser<'a> {
         if self.check(token_type) {
             return Ok(self.advance().clone());
         }
-        // Error handling goes here!
-        // Time to implement error types, and go through the parser methods to switch to Result<>
-        Err(self.error(self.peek(), message))
+        Err(self.error(&self.peek().clone(), message))
     }
 
     fn token_match(&mut self, types: &[TokenType]) -> bool {
@@ -180,7 +178,7 @@ impl<'a> Parser<'a> {
         &self.tokens[self.current - 1]
     }
 
-    fn error(&self, token: &Token, message: &str) -> ParseError {
+    fn error(&mut self, token: &Token, message: &str) -> ParseError {
         self.lox.parse_error(token, message);
         ParseError::Error
     }
@@ -199,4 +197,46 @@ impl<'a> Parser<'a> {
             self.advance();
         }
     }
+}
+
+pub fn parse(lox: &mut Lox, tokens: Vec<Token>) -> Option<Expr> {
+    Parser::parse(lox, tokens)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        ast::Expr,
+        lox::Lox,
+        token::{Token, Value},
+    };
+
+    #[test]
+    fn test_expressions() {
+        let mut lox = Lox::new();
+        let expr = lox.parse_code("1 + 2").unwrap();
+        assert!(!lox.had_error);
+        let expr2 = Expr::binary(
+            Expr::Literal(1.into()),
+            Token::new(
+                crate::token_type::TokenType::Plus,
+                "+".to_string(),
+                Value::None,
+                1,
+            ),
+            Expr::Literal(2.into()),
+        );
+
+        assert_eq!(expr, expr2);
+    }
+
+    #[test]
+    fn test_unmatched_paren() {
+        let mut lox = Lox::new();
+        let expr = lox.parse_code("1 + (2");
+        assert!(lox.had_error);
+        assert!(expr.is_none());
+    }
+
+
 }

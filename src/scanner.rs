@@ -57,6 +57,7 @@ impl Scanner {
         self.current >= self.source.len()
     }
 
+    // TODO: Can we change Into<Value> to Value?
     fn add_token_literal(&mut self, t: TokenType, literal: impl Into<Value>) {
         let text: String = self.source[self.start..self.current].iter().collect();
         self.tokens
@@ -97,7 +98,7 @@ impl Scanner {
         self.source[self.current + 1]
     }
 
-    fn scan_token(&mut self, lox: &Lox) {
+    fn scan_token(&mut self, lox: &mut Lox) {
         let c = self.advance();
         match c {
             '(' => self.add_token(LeftParen),
@@ -196,7 +197,7 @@ impl Scanner {
         self.add_token_literal(Number, value);
     }
 
-    fn string(&mut self, lox: &Lox) {
+    fn string(&mut self, lox: &mut Lox) {
         while self.peek() != '"' && !self.is_at_end() {
             if self.peek() == '\n' {
                 self.line += 1;
@@ -214,7 +215,7 @@ impl Scanner {
         self.add_token_literal(String, value);
     }
 
-    fn scan_tokens(mut self, lox: &Lox) -> Vec<Token> {
+    fn scan_tokens(mut self, lox: &mut Lox) -> Vec<Token> {
         while !self.is_at_end() {
             self.start = self.current;
             self.scan_token(lox);

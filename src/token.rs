@@ -39,6 +39,12 @@ impl From<&str> for Value {
     }
 }
 
+impl From<isize> for Value {
+    fn from(value: isize) -> Self {
+        Value::Number(value as f64)
+    }
+}
+
 impl From<f64> for Value {
     fn from(value: f64) -> Self {
         Value::Number(value)

@@ -2,10 +2,11 @@ use std::fmt::{Debug, Display};
 
 use crate::token_type::TokenType;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Value {
     Number(f64),
     String(String),
+    Bool(bool),
     None,
 }
 
@@ -13,9 +14,16 @@ impl Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Number(num) => write!(f, "{num}"),
-            Self::String(value) => f.write_str(value),
+            Self::Bool(b) => write!(f, "{b}"),
+            Self::String(value) => write!(f, "\"{value}\""),
             Self::None => f.write_str("nil"),
         }
+    }
+}
+
+impl From<bool> for Value {
+    fn from(value: bool) -> Self {
+        Value::Bool(value)
     }
 }
 
@@ -55,7 +63,7 @@ impl From<Option<f64>> for Value {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Token {
     pub token_type: TokenType,
     pub lexeme: String,

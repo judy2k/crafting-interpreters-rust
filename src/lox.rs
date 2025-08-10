@@ -4,9 +4,14 @@ use std::{
     path::Path,
 };
 
+use crate::{
+    ast_printer::AstPrinter, parser::Parser, scanner::scan_tokens, token::Token,
+    token_type::TokenType,
+};
+
 #[derive(Default, Debug)]
 pub struct Lox {
-    has_error: bool,
+    had_error: bool,
 }
 
 impl Lox {
@@ -29,13 +34,25 @@ impl Lox {
         loop {
             print!("> ");
             stdout.flush()?;
+            buffer.clear();
             stdin.read_line(&mut buffer)?;
             // TODO: Handle end of stream.
             self.run(&buffer);
         }
     }
 
-    fn run(&mut self, _code: &str) {}
+    fn run(&mut self, code: &str) {
+        let tokens = scan_tokens(self, code);
+        let expression = Parser::parse(self, tokens);
+        if self.had_error {
+            return;
+        }
+
+        println!(
+            "{}",
+            AstPrinter::new().print(&expression.expect("Expression unexpectedly None!"))
+        );
+    }
 
     pub fn error(&self, line: usize, message: &str) {
         self.report(line, "", message)
@@ -43,6 +60,14 @@ impl Lox {
 
     fn report(&self, line: usize, loc: &str, message: &str) {
         eprintln!("[line {line}] Error {loc} : {message}");
+    }
+
+    pub fn parse_error(&self, token: &Token, message: &str) {
+        if token.token_type == TokenType::EOF {
+            self.report(token.line, " at end", message);
+        } else {
+            self.report(token.line, &format!(" at '{}'", token.lexeme), message);
+        }
     }
 }
 
@@ -53,6 +78,6 @@ mod tests {
     #[test]
     fn test_lox_default() {
         let l: Lox = Default::default();
-        assert!(!l.has_error, "Lox should be created with no errors.")
+        assert!(!l.had_error, "Lox should be created with no errors.")
     }
 }

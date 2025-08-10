@@ -1,8 +1,17 @@
 use crate::ast::{self, *};
 
+#[derive(Default, Debug)]
 pub(crate) struct AstPrinter;
 
 impl AstPrinter {
+    pub fn new() -> Self {
+        Default::default()
+    }
+
+    pub fn print(&self, expr: &Expr) -> String {
+        self.visit_expr(expr)
+    }
+
     fn parenthesize(&self, name: &str, exprs: &[&Expr]) -> String {
         let mut result = String::new();
         result.push('(');

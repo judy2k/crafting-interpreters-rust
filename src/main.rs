@@ -4,7 +4,9 @@ use eyre::eyre;
 
 mod ast;
 mod ast_printer;
+mod interpreter;
 mod lox;
+mod parser;
 mod scanner;
 mod token;
 mod token_type;
@@ -24,4 +26,3 @@ fn main() -> eyre::Result<()> {
 
     Ok(())
 }
-

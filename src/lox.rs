@@ -42,8 +42,7 @@ impl Lox {
     }
 
     fn run(&mut self, code: &str) {
-        let tokens = scan_tokens(self, code);
-        let expression = parse(self, tokens);
+        let expression = self.parse_code(code);
         if self.had_error {
             return;
         }
@@ -71,12 +70,12 @@ impl Lox {
         }
     }
 
-    pub fn scan_tokens(&mut self, code: &str) -> Vec<Token> {
+    fn scan_tokens(&mut self, code: &str) -> Vec<Token> {
         scan_tokens(self, code)
     }
 
     pub fn parse_code(&mut self, code: &str) -> Option<Expr> {
-        let tokens = scan_tokens(self, code);
+        let tokens = self.scan_tokens(code);
         parse(self, tokens)
     }
 }

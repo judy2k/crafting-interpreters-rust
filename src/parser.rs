@@ -192,7 +192,7 @@ mod tests {
     };
 
     #[test]
-    fn test_expressions() {
+    fn test_addition() {
         let mut lox = Lox::new();
         let expr = lox.parse_code("1 + 2").unwrap();
         assert!(!lox.had_error);
@@ -211,10 +211,98 @@ mod tests {
     }
 
     #[test]
-    fn test_unmatched_paren() {
+    fn test_multiplication() {
         let mut lox = Lox::new();
-        let expr = lox.parse_code("1 + (2");
-        assert!(lox.had_error);
-        assert!(expr.is_none());
+        let expr = lox.parse_code("1 * 2").unwrap();
+        assert!(!lox.had_error);
+        let expr2 = Expr::binary(
+            Expr::Literal(1.into()),
+            Token::new(
+                crate::token_type::TokenType::Star,
+                "*".to_string(),
+                Value::None,
+                1,
+            ),
+            Expr::Literal(2.into()),
+        );
+
+        assert_eq!(expr, expr2);
+    }
+
+    #[test]
+    fn test_division() {
+        let mut lox = Lox::new();
+        let expr = lox.parse_code("1 / 2").unwrap();
+        assert!(!lox.had_error);
+        let expr2 = Expr::binary(
+            Expr::Literal(1.into()),
+            Token::new(
+                crate::token_type::TokenType::Slash,
+                "/".to_string(),
+                Value::None,
+                1,
+            ),
+            Expr::Literal(2.into()),
+        );
+
+        assert_eq!(expr, expr2);
+    }
+
+    #[test]
+    fn test_group() {
+        let mut lox = Lox::new();
+        let expr = lox.parse_code("(1)").unwrap();
+        assert!(!lox.had_error);
+        assert_eq!(expr, Expr::grouping(Expr::Literal(1.into())));
+    }
+
+    #[test]
+    fn test_unmatched_paren() {
+        for s in ["1 + (2", "(", "(1"] {
+            let mut lox = Lox::new();
+            let expr = lox.parse_code(s);
+            assert!(lox.had_error);
+            assert!(expr.is_none());
+        }
+    }
+
+    #[test]
+    fn test_bang() {
+        let mut lox = Lox::new();
+        let expr = lox.parse_code("!true").unwrap();
+        assert!(!lox.had_error);
+        let expr2 = Expr::unary(
+            Token::new(
+                crate::token_type::TokenType::Bang,
+                "!".into(),
+                Value::None,
+                1,
+            ),
+            Expr::literal(true),
+        );
+
+        assert_eq!(expr, expr2);
+    }
+
+    #[test]
+    fn test_precedence() {
+        let mut lox = Lox::new();
+        let expr = lox.parse_code("1 * 2 + 3 / 4").unwrap();
+        assert!(!lox.had_error);
+
+        let left = lox.parse_code("1 * 2").unwrap();
+        let right = lox.parse_code("3 / 4").unwrap();
+        let expr2 = Expr::binary(
+            left,
+            Token::new(
+                crate::token_type::TokenType::Plus,
+                "+".to_string(),
+                Value::None,
+                1,
+            ),
+            right,
+        );
+
+        assert_eq!(expr, expr2);
     }
 }

@@ -40,3 +40,17 @@ impl Expr {
         }
     }
 }
+
+pub enum Stmt {
+    Expression(Expr),
+    Print(Expr),
+}
+
+impl Stmt {
+    pub fn expression(expression: Expr) -> Self {
+        Self::Expression(expression)
+    }
+    pub fn print(expression: Expr) -> Self {
+        Self::print(expression)
+    }
+}

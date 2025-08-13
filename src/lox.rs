@@ -7,9 +7,9 @@ use std::{
 use thiserror::Error;
 
 use crate::{
-    ast::Expr,
+    ast::{Expr, Stmt},
     interpreter::{Interpreter, RuntimeError},
-    parser::parse,
+    parser::{ParseError, parse},
     scanner::scan_tokens,
     token::Token,
     token_type::TokenType,
@@ -93,21 +93,21 @@ impl Lox {
     }
 
     fn run(&mut self, code: &str) {
-        let expression = self.parse_code(code);
+        let statements = self.parse_code(code).ok();
         if self.reporter.had_error {
             return;
         }
-        self.interpreter.interpret(
-            &mut self.reporter,
-            &expression.expect("Expression unexpectedly None!"),
-        );
+        // self.interpreter.interpret(
+        //     &mut self.reporter,
+        //     &expression.expect("Expression unexpectedly None!"),
+        // );
     }
 
     fn scan_tokens(&mut self, code: &str) -> Vec<Token> {
         scan_tokens(&mut self.reporter, code)
     }
 
-    pub fn parse_code(&mut self, code: &str) -> Option<Expr> {
+    pub fn parse_code(&mut self, code: &str) -> Result<Vec<Stmt>, ParseError> {
         let tokens = self.scan_tokens(code);
         parse(&mut self.reporter, tokens)
     }

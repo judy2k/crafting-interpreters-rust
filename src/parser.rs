@@ -1,17 +1,19 @@
 use thiserror::Error;
 
+use crate::ast::Stmt;
 use crate::lox::LoxReporter;
 use crate::token::Value;
 use crate::token_type::TokenType::{self, *};
 use crate::{ast::Expr, token::Token};
 
 #[derive(Error, Debug)]
-enum ParseError {
+pub enum ParseError {
     #[error("An error occured with parsing.")]
     Error,
 }
 
 type ExprResult = Result<Expr, ParseError>;
+type StmtResult = Result<Stmt, ParseError>;
 
 #[derive(Debug)]
 pub struct Parser<'a> {
@@ -21,7 +23,7 @@ pub struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    fn new(reporter: &'a mut LoxReporter, tokens: &'a [Token]) -> Self {
+    pub fn new(reporter: &'a mut LoxReporter, tokens: &'a [Token]) -> Self {
         Self {
             reporter,
             tokens,
@@ -29,8 +31,18 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse(reporter: &'a mut LoxReporter, tokens: &'a [Token]) -> Option<Expr> {
-        Self::new(reporter, tokens).expression().ok()
+    fn parse(reporter: &'a mut LoxReporter, tokens: &'a [Token]) -> Result<Vec<Stmt>, ParseError> {
+        let mut parser = Self::new(reporter, tokens);
+        let mut statements: Vec<Stmt> = vec![];
+        while !parser.is_at_end() {
+            statements.push(parser.statement()?);
+        }
+
+        Ok(statements)
+    }
+
+    fn statement(&mut self) -> StmtResult {
+        todo!()
     }
 
     fn expression(&mut self) -> ExprResult {
@@ -179,23 +191,33 @@ impl<'a> Parser<'a> {
     }
 }
 
-pub fn parse(reporter: &mut LoxReporter, tokens: Vec<Token>) -> Option<Expr> {
+pub fn parse(reporter: &mut LoxReporter, tokens: Vec<Token>) -> Result<Vec<Stmt>, ParseError> {
     Parser::parse(reporter, &tokens)
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        ast::Expr,
-        lox::Lox,
-        token::{Token, Value},
-    };
+    use crate::ast::Expr;
+    use crate::lox::LoxReporter;
+    use crate::parser::ExprResult;
+    use crate::scanner::scan_tokens;
+    use crate::token::{Token, Value};
+
+    use super::Parser;
+
+    fn parse_expression(expression: &str) -> (ExprResult, bool) {
+        let mut reporter: LoxReporter = Default::default();
+        let tokens = scan_tokens(&mut reporter, expression);
+        let expr = Parser::new(&mut reporter, &tokens).expression();
+
+        (expr, reporter.had_error)
+    }
 
     #[test]
     fn test_addition() {
-        let mut lox = Lox::new();
-        let expr = lox.parse_code("1 + 2").unwrap();
-        assert!(!lox.reporter.had_error);
+        let (expr, had_error) = parse_expression("1 + 2");
+
+        assert!(!had_error);
         let expr2 = Expr::binary(
             Expr::Literal(1.into()),
             Token::new(
@@ -207,14 +229,13 @@ mod tests {
             Expr::Literal(2.into()),
         );
 
-        assert_eq!(expr, expr2);
+        assert_eq!(expr.unwrap(), expr2);
     }
 
     #[test]
     fn test_multiplication() {
-        let mut lox = Lox::new();
-        let expr = lox.parse_code("1 * 2").unwrap();
-        assert!(!lox.reporter.had_error);
+        let (expr, had_error) = parse_expression("1 * 2");
+        assert!(!had_error);
         let expr2 = Expr::binary(
             Expr::Literal(1.into()),
             Token::new(
@@ -226,14 +247,13 @@ mod tests {
             Expr::Literal(2.into()),
         );
 
-        assert_eq!(expr, expr2);
+        assert_eq!(expr.unwrap(), expr2);
     }
 
     #[test]
     fn test_division() {
-        let mut lox = Lox::new();
-        let expr = lox.parse_code("1 / 2").unwrap();
-        assert!(!lox.reporter.had_error);
+        let (expr, had_error) = parse_expression("1 / 2");
+        assert!(!had_error);
         let expr2 = Expr::binary(
             Expr::Literal(1.into()),
             Token::new(
@@ -245,32 +265,29 @@ mod tests {
             Expr::Literal(2.into()),
         );
 
-        assert_eq!(expr, expr2);
+        assert_eq!(expr.unwrap(), expr2);
     }
 
     #[test]
     fn test_group() {
-        let mut lox = Lox::new();
-        let expr = lox.parse_code("(1)").unwrap();
-        assert!(!lox.reporter.had_error);
-        assert_eq!(expr, Expr::grouping(Expr::Literal(1.into())));
+        let (expr, had_error) = parse_expression("(1)");
+        assert!(!had_error);
+        assert_eq!(expr.unwrap(), Expr::grouping(Expr::Literal(1.into())));
     }
 
     #[test]
     fn test_unmatched_paren() {
         for s in ["1 + (2", "(", "(1"] {
-            let mut lox = Lox::new();
-            let expr = lox.parse_code(s);
-            assert!(lox.reporter.had_error);
-            assert!(expr.is_none());
+            let (expr, had_error) = parse_expression(s);
+            assert!(had_error);
+            assert!(expr.is_err());
         }
     }
 
     #[test]
     fn test_bang() {
-        let mut lox = Lox::new();
-        let expr = lox.parse_code("!true").unwrap();
-        assert!(!lox.reporter.had_error);
+        let (expr, had_error) = parse_expression("!true");
+        assert!(!had_error);
         let expr2 = Expr::unary(
             Token::new(
                 crate::token_type::TokenType::Bang,
@@ -281,17 +298,16 @@ mod tests {
             Expr::literal(true),
         );
 
-        assert_eq!(expr, expr2);
+        assert_eq!(expr.unwrap(), expr2);
     }
 
     #[test]
     fn test_precedence() {
-        let mut lox = Lox::new();
-        let expr = lox.parse_code("1 * 2 + 3 / 4").unwrap();
-        assert!(!lox.reporter.had_error);
+        let (expr, had_error) = parse_expression("1 * 2 + 3 / 4");
+        assert!(!had_error);
 
-        let left = lox.parse_code("1 * 2").unwrap();
-        let right = lox.parse_code("3 / 4").unwrap();
+        let left = parse_expression("1 * 2").0.unwrap();
+        let right = parse_expression("3 / 4").0.unwrap();
         let expr2 = Expr::binary(
             left,
             Token::new(
@@ -303,6 +319,6 @@ mod tests {
             right,
         );
 
-        assert_eq!(expr, expr2);
+        assert_eq!(expr.unwrap(), expr2);
     }
 }

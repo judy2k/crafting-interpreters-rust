@@ -1,6 +1,6 @@
 use crate::token::{Token, Value};
 
-pub trait Visitor<R> {
+pub trait ExprVisitor<R> {
     fn visit_expr(&self, expr: &Expr) -> R;
 }
 
@@ -39,6 +39,10 @@ impl Expr {
             right: Box::new(right),
         }
     }
+}
+
+pub trait StmtVisitor<R> {
+    fn visit_stmt(&self, expr: &Expr) -> R;
 }
 
 pub enum Stmt {

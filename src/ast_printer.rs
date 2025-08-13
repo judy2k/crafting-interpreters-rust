@@ -25,7 +25,7 @@ impl AstPrinter {
     }
 }
 
-impl ast::Visitor<String> for AstPrinter {
+impl ast::ExprVisitor<String> for AstPrinter {
     fn visit_expr(&self, expr: &Expr) -> String {
         match expr {
             Expr::Binary {
@@ -45,7 +45,7 @@ impl ast::Visitor<String> for AstPrinter {
 #[cfg(test)]
 mod tests {
     use crate::{
-        ast::{Expr, Visitor},
+        ast::{Expr, ExprVisitor},
         ast_printer::AstPrinter,
         token::{Token, Value},
         token_type::TokenType,

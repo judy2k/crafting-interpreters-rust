@@ -7,7 +7,7 @@ use std::{
 use thiserror::Error;
 
 use crate::{
-    ast::Expr, ast_printer::AstPrinter, interpreter::RuntimeError, parser::parse, scanner::scan_tokens, token::Token, token_type::TokenType
+    ast::Expr, ast_printer::AstPrinter, interpreter::{Interpreter, RuntimeError}, parser::parse, scanner::scan_tokens, token::Token, token_type::TokenType
 };
 
 #[derive(Debug, Error)]
@@ -17,9 +17,39 @@ pub enum LoxError {
 }
 
 #[derive(Default, Debug)]
-pub struct Lox {
+pub struct LoxReporter {
     pub had_error: bool,
     pub had_runtime_error: bool,
+}
+
+impl LoxReporter {
+    pub(crate) fn error(&mut self, line: usize, message: &str) {
+        self.report(line, "", message)
+    }
+
+    fn report(&mut self, line: usize, loc: &str, message: &str) {
+        eprintln!("[line {line}] Error {loc} : {message}");
+        self.had_error = true;
+    }
+
+    pub(crate) fn runtime_error(&mut self, error: RuntimeError) {
+        eprintln!("{}", error);
+        self.had_runtime_error = true;
+    }
+
+    pub(crate) fn parse_error(&mut self, token: &Token, message: &str) {
+        if token.token_type == TokenType::EOF {
+            self.report(token.line, " at end", message);
+        } else {
+            self.report(token.line, &format!(" at '{}'", token.lexeme), message);
+        }
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct Lox {
+    interpreter: Interpreter,
+    pub reporter: LoxReporter,
 }
 
 impl Lox {
@@ -31,11 +61,11 @@ impl Lox {
         let code = read_to_string(path)?;
         self.run(&code);
 
-        if self.had_error {
+        if self.reporter.had_error {
             std::process::exit(65);
         }
         
-        if self.had_runtime_error { 
+        if self.reporter.had_runtime_error { 
             std::process::exit(70);
         }
 
@@ -60,45 +90,21 @@ impl Lox {
 
     fn run(&mut self, code: &str) {
         let expression = self.parse_code(code);
-        if self.had_error {
+        if self.reporter.had_error {
             return;
         }
-
-        println!(
-            "{}",
-            AstPrinter::new().print(&expression.expect("Expression unexpectedly None!"))
-        );
+        self.interpreter.interpret(&mut self.reporter, &expression.expect("Expression unexpectedly None!"));
     }
 
-    pub(crate) fn error(&mut self, line: usize, message: &str) {
-        self.report(line, "", message)
-    }
-
-    fn report(&mut self, line: usize, loc: &str, message: &str) {
-        eprintln!("[line {line}] Error {loc} : {message}");
-        self.had_error = true;
-    }
-
-    pub(crate) fn runtime_error(&mut self, error: RuntimeError) {
-        println!("{}", error);
-        self.had_runtime_error = true;
-    }
-
-    pub(crate) fn parse_error(&mut self, token: &Token, message: &str) {
-        if token.token_type == TokenType::EOF {
-            self.report(token.line, " at end", message);
-        } else {
-            self.report(token.line, &format!(" at '{}'", token.lexeme), message);
-        }
-    }
+    
 
     fn scan_tokens(&mut self, code: &str) -> Vec<Token> {
-        scan_tokens(self, code)
+        scan_tokens(&mut self.reporter, code)
     }
 
     pub fn parse_code(&mut self, code: &str) -> Option<Expr> {
         let tokens = self.scan_tokens(code);
-        parse(self, tokens)
+        parse(&mut self.reporter, tokens)
     }
 }
 
@@ -109,6 +115,6 @@ mod tests {
     #[test]
     fn test_lox_default() {
         let l: Lox = Default::default();
-        assert!(!l.had_error, "Lox should be created with no errors.")
+        assert!(!l.reporter.had_error, "Lox should be created with no errors.")
     }
 }

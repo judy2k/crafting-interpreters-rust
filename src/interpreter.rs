@@ -6,7 +6,7 @@ use thiserror::Error;
 
 use crate::{
     ast::{Expr, Visitor},
-    lox::Lox,
+    lox::{Lox, LoxReporter},
     token::{Token, Value},
     token_type::TokenType,
 };
@@ -32,20 +32,18 @@ impl Display for RuntimeError {
     }
 }
 
-#[derive(Debug)]
-pub struct Interpreter<'a> {
-    lox: &'a mut Lox,
-}
+#[derive(Debug, Default)]
+pub struct Interpreter;
 
-impl<'a> Interpreter<'a> {
-    pub fn new(lox: &'a mut Lox) -> Self {
-        Self { lox }
+impl Interpreter {
+    pub fn new() -> Self {
+        Default::default()
     }
 
-    pub fn interpret(&mut self, expression: &Expr) {
+    pub fn interpret(&mut self, reporter: &mut LoxReporter, expression: &Expr) {
         match self.evaluate(expression) {
             Ok(value) => println!("{}", value.to_string()),
-            Err(error) => self.lox.runtime_error(error),
+            Err(error) => reporter.runtime_error(error),
         }
     }
 
@@ -54,7 +52,12 @@ impl<'a> Interpreter<'a> {
     }
 }
 
-impl<'a> Visitor<Result<Value, RuntimeError>> for Interpreter<'a> {
+#[inline]
+fn number_operands_error(operator: &Token) -> RuntimeError {
+    RuntimeError::new(operator.clone(), "Operands must be numbers.")
+}
+
+impl Visitor<Result<Value, RuntimeError>> for Interpreter {
     fn visit_expr(&self, expr: &crate::ast::Expr) -> Result<Value, RuntimeError> {
         match expr {
             crate::ast::Expr::Binary {
@@ -68,24 +71,61 @@ impl<'a> Visitor<Result<Value, RuntimeError>> for Interpreter<'a> {
                     TokenType::Minus => match (left, right) {
                         (Value::Number(left), Value::Number(right)) => {
                             Ok(Value::Number(left - right))
-                        }
-                        _ => todo!(),
+                        },
+                        _ => Err(number_operands_error(operator)),
+                    },
+                    TokenType::Plus => match (left, right) {
+                        (Value::Number(left), Value::Number(right)) => {
+                            Ok(Value::Number(left + right))
+                        },
+                        (Value::String(left), Value::String(right)) => {
+                            let mut result = left.to_string();
+                            result.push_str(&right);
+                            Ok(Value::String(result))
+                        },
+                        _ => Err(number_operands_error(operator)),
                     },
                     TokenType::Slash => match (left, right) {
                         (Value::Number(left), Value::Number(right)) => {
                             Ok(Value::Number(left / right))
                         }
-                        _ => todo!(),
+                        _ => Err(number_operands_error(operator)),
                     },
                     TokenType::Star => match (left, right) {
                         (Value::Number(left), Value::Number(right)) => {
                             Ok(Value::Number(left * right))
                         }
-                        _ => todo!(),
+                        _ => Err(number_operands_error(operator)),
                     },
+                    TokenType::Greater => match (left, right) {
+                        (Value::Number(left), Value::Number(right)) => {
+                            Ok(Value::Bool(left > right))
+                        }
+                        _ => Err(number_operands_error(operator)),
+                    },
+                    TokenType::GreaterEqual => match (left, right) {
+                        (Value::Number(left), Value::Number(right)) => {
+                            Ok(Value::Bool(left >= right))
+                        }
+                        _ => Err(number_operands_error(operator)),
+                    },
+                    TokenType::Less => match (left, right) {
+                        (Value::Number(left), Value::Number(right)) => {
+                            Ok(Value::Bool(left < right))
+                        }
+                        _ => Err(number_operands_error(operator)),
+                    },
+                    TokenType::LessEqual => match (left, right) {
+                        (Value::Number(left), Value::Number(right)) => {
+                            Ok(Value::Bool(left <= right))
+                        }
+                        _ => Err(number_operands_error(operator)),
+                    },
+                    TokenType::BangEqual => Ok(Value::Bool(left != right)),
+                    TokenType::EqualEqual => Ok(Value::Bool(left == right)),
                     _ => panic!("Unexpected binary operator!"),
                 }
-            }
+            },
             Expr::Grouping(expr) => self.visit_expr(expr),
             Expr::Literal(value) => Ok(value.clone()),
             Expr::Unary { operator, right } => {

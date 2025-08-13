@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::string::String;
 use std::sync::OnceLock;
 
-use crate::lox::Lox;
+use crate::lox::{Lox, LoxReporter};
 use crate::token::{Token, Value};
 use crate::token_type::TokenType::{self, *};
 
@@ -31,8 +31,8 @@ fn keywords() -> &'static HashMap<String, TokenType> {
     })
 }
 
-pub fn scan_tokens(lox: &mut Lox, source: &str) -> Vec<Token> {
-    Scanner::new(source).scan_tokens(lox)
+pub fn scan_tokens(reporter: &mut LoxReporter, source: &str) -> Vec<Token> {
+    Scanner::new(source).scan_tokens(reporter)
 }
 
 #[derive(Default, Debug)]
@@ -98,7 +98,7 @@ impl Scanner {
         self.source[self.current + 1]
     }
 
-    fn scan_token(&mut self, lox: &mut Lox) {
+    fn scan_token(&mut self, reporter: &mut LoxReporter) {
         let c = self.advance();
         match c {
             '(' => self.add_token(LeftParen),
@@ -154,14 +154,14 @@ impl Scanner {
             }
             ' ' | '\r' | '\t' => (),
             '\n' => self.line += 1,
-            '"' => self.string(lox),
+            '"' => self.string(reporter),
             _ => {
                 if is_digit(c) {
                     self.number();
                 } else if is_alpha(c) {
                     self.identifier();
                 } else {
-                    lox.error(self.line, "Unexpected character.");
+                    reporter.error(self.line, "Unexpected character.");
                 }
             }
         };
@@ -197,7 +197,7 @@ impl Scanner {
         self.add_token_literal(Number, value);
     }
 
-    fn string(&mut self, lox: &mut Lox) {
+    fn string(&mut self, reporter: &mut LoxReporter) {
         while self.peek() != '"' && !self.is_at_end() {
             if self.peek() == '\n' {
                 self.line += 1;
@@ -205,7 +205,7 @@ impl Scanner {
             self.advance();
         }
         if self.is_at_end() {
-            lox.error(self.line, "Unterminated string.");
+            reporter.error(self.line, "Unterminated string.");
             return;
         }
         self.advance(); // the closing '"'
@@ -215,10 +215,10 @@ impl Scanner {
         self.add_token_literal(String, value);
     }
 
-    fn scan_tokens(mut self, lox: &mut Lox) -> Vec<Token> {
+    fn scan_tokens(mut self, reporter: &mut LoxReporter) -> Vec<Token> {
         while !self.is_at_end() {
             self.start = self.current;
-            self.scan_token(lox);
+            self.scan_token(reporter);
         }
 
         self.tokens
@@ -242,13 +242,12 @@ fn is_alpha_numeric(c: char) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::lox::Lox;
 
     #[test]
     fn test_identifier() {
         let t1 = Token::new(Or, "or".into(), Value::None, 1);
         let t2 = Token::new(Identifier, "thing".into(), Value::None, 1);
-        let tokens = scan_tokens(&mut Lox::new(), "or thing");
+        let tokens = scan_tokens(&mut Default::default(), "or thing");
         assert_eq!(tokens[0], t1);
         assert_eq!(tokens[1], t2);
     }

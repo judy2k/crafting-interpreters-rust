@@ -42,7 +42,22 @@ impl<'a> Parser<'a> {
     }
 
     fn statement(&mut self) -> StmtResult {
-        todo!()
+        if self.token_match(&[Print]) {
+            return self.print_statement();
+        }
+        return self.expression_statement();
+    }
+
+    fn print_statement(&mut self) -> StmtResult {
+        let value = self.expression()?;
+        self.consume(Semicolon, "Expect ';' after value.")?;
+        return Ok(Stmt::Print(value));
+    }
+
+    fn expression_statement(&mut self) -> StmtResult {
+        let expr = self.expression()?;
+        self.consume(Semicolon, "Expect ';' after statement.")?;
+        return Ok(Stmt::Expression(expr));
     }
 
     fn expression(&mut self) -> ExprResult {
@@ -197,7 +212,7 @@ pub fn parse(reporter: &mut LoxReporter, tokens: Vec<Token>) -> Result<Vec<Stmt>
 
 #[cfg(test)]
 mod tests {
-    use crate::ast::Expr;
+    use crate::ast::{Expr, Stmt};
     use crate::lox::LoxReporter;
     use crate::parser::ExprResult;
     use crate::scanner::scan_tokens;
@@ -205,12 +220,60 @@ mod tests {
 
     use super::Parser;
 
+
     fn parse_expression(expression: &str) -> (ExprResult, bool) {
         let mut reporter: LoxReporter = Default::default();
         let tokens = scan_tokens(&mut reporter, expression);
         let expr = Parser::new(&mut reporter, &tokens).expression();
 
         (expr, reporter.had_error)
+    }
+
+    #[test]
+    fn test_expression_statement() {
+        let stmt = "1 + 2;";
+        let mut reporter: LoxReporter = Default::default();
+        let tokens = scan_tokens(&mut reporter, stmt);
+        let mut parser = Parser::new(&mut reporter, &tokens);
+        let stmt = parser.statement().unwrap();
+
+        let expr2 = Expr::binary(
+            Expr::Literal(1.into()),
+            Token::new(
+                crate::token_type::TokenType::Plus,
+                "+".to_string(),
+                Value::None,
+                1,
+            ),
+            Expr::Literal(2.into()),
+        );
+        let stmt2 = Stmt::expression(expr2);
+
+        assert_eq!(stmt, stmt2);
+    }
+
+
+        #[test]
+    fn test_print_statement() {
+        let stmt = "print 1 + 2;";
+        let mut reporter: LoxReporter = Default::default();
+        let tokens = scan_tokens(&mut reporter, stmt);
+        let mut parser = Parser::new(&mut reporter, &tokens);
+        let stmt = parser.statement().unwrap();
+
+        let expr2 = Expr::binary(
+            Expr::Literal(1.into()),
+            Token::new(
+                crate::token_type::TokenType::Plus,
+                "+".to_string(),
+                Value::None,
+                1,
+            ),
+            Expr::Literal(2.into()),
+        );
+        let stmt2 = Stmt::print(expr2);
+
+        assert_eq!(stmt, stmt2);
     }
 
     #[test]

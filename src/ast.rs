@@ -45,6 +45,7 @@ pub trait StmtVisitor<R> {
     fn visit_stmt(&self, expr: &Expr) -> R;
 }
 
+#[derive(Debug, PartialEq)]
 pub enum Stmt {
     Expression(Expr),
     Print(Expr),
@@ -55,6 +56,6 @@ impl Stmt {
         Self::Expression(expression)
     }
     pub fn print(expression: Expr) -> Self {
-        Self::print(expression)
+        Self::Print(expression)
     }
 }

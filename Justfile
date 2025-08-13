@@ -8,7 +8,7 @@ test:
     cargo nextest run
 
 run:
-    cargo run
+    RUST_BACKTRACE=1 cargo run
 
 ast:
     ./generate_ast.py src

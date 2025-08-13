@@ -68,7 +68,7 @@ impl Lox {
 
     pub fn run_file(&mut self, path: &Path) -> Result<(), LoxError> {
         let code = read_to_string(path)?;
-        self.run(&code);
+        self.run(&code)?;
 
         if self.reporter.had_error {
             std::process::exit(65);
@@ -91,8 +91,7 @@ impl Lox {
             stdout.flush()?;
             buffer.clear();
             stdin.read_line(&mut buffer)?;
-            // TODO: Handle end of stream.
-            self.run(&buffer);
+            let _ = self.run(&buffer);
         }
     }
 

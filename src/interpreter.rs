@@ -40,13 +40,13 @@ impl Interpreter {
         Default::default()
     }
 
-    pub fn execute(&mut self, reporter: &mut LoxReporter, stmt: &Stmt) -> Result<(), RuntimeError> {
+    pub fn execute(&mut self, stmt: &Stmt) -> Result<(), RuntimeError> {
         self.visit_stmt(stmt)
     }
 
     pub fn interpret(&mut self, reporter: &mut LoxReporter, statements: &Vec<Stmt>) {
         for statement in statements {
-            if let Err(error) = self.execute(reporter, statement) {
+            if let Err(error) = self.execute(statement) {
                 reporter.runtime_error(error);
                 return;
             }

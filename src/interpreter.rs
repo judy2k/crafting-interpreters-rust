@@ -71,18 +71,18 @@ impl Visitor<Result<Value, RuntimeError>> for Interpreter {
                     TokenType::Minus => match (left, right) {
                         (Value::Number(left), Value::Number(right)) => {
                             Ok(Value::Number(left - right))
-                        },
+                        }
                         _ => Err(number_operands_error(operator)),
                     },
                     TokenType::Plus => match (left, right) {
                         (Value::Number(left), Value::Number(right)) => {
                             Ok(Value::Number(left + right))
-                        },
+                        }
                         (Value::String(left), Value::String(right)) => {
                             let mut result = left.to_string();
                             result.push_str(&right);
                             Ok(Value::String(result))
-                        },
+                        }
                         _ => Err(number_operands_error(operator)),
                     },
                     TokenType::Slash => match (left, right) {
@@ -125,7 +125,7 @@ impl Visitor<Result<Value, RuntimeError>> for Interpreter {
                     TokenType::EqualEqual => Ok(Value::Bool(left == right)),
                     _ => panic!("Unexpected binary operator!"),
                 }
-            },
+            }
             Expr::Grouping(expr) => self.visit_expr(expr),
             Expr::Literal(value) => Ok(value.clone()),
             Expr::Unary { operator, right } => {

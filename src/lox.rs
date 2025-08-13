@@ -7,7 +7,12 @@ use std::{
 use thiserror::Error;
 
 use crate::{
-    ast::Expr, interpreter::{Interpreter, RuntimeError}, parser::parse, scanner::scan_tokens, token::Token, token_type::TokenType
+    ast::Expr,
+    interpreter::{Interpreter, RuntimeError},
+    parser::parse,
+    scanner::scan_tokens,
+    token::Token,
+    token_type::TokenType,
 };
 
 #[derive(Debug, Error)]
@@ -64,11 +69,10 @@ impl Lox {
         if self.reporter.had_error {
             std::process::exit(65);
         }
-        
-        if self.reporter.had_runtime_error { 
+
+        if self.reporter.had_runtime_error {
             std::process::exit(70);
         }
-
 
         Ok(())
     }
@@ -93,10 +97,11 @@ impl Lox {
         if self.reporter.had_error {
             return;
         }
-        self.interpreter.interpret(&mut self.reporter, &expression.expect("Expression unexpectedly None!"));
+        self.interpreter.interpret(
+            &mut self.reporter,
+            &expression.expect("Expression unexpectedly None!"),
+        );
     }
-
-    
 
     fn scan_tokens(&mut self, code: &str) -> Vec<Token> {
         scan_tokens(&mut self.reporter, code)
@@ -115,6 +120,9 @@ mod tests {
     #[test]
     fn test_lox_default() {
         let l: Lox = Default::default();
-        assert!(!l.reporter.had_error, "Lox should be created with no errors.")
+        assert!(
+            !l.reporter.had_error,
+            "Lox should be created with no errors."
+        )
     }
 }

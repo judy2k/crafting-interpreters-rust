@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::lox::{Lox, LoxReporter};
+use crate::lox::LoxReporter;
 use crate::token::Value;
 use crate::token_type::TokenType::{self, *};
 use crate::{ast::Expr, token::Token};

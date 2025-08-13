@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::string::String;
 use std::sync::OnceLock;
 
-use crate::lox::{Lox, LoxReporter};
+use crate::lox::LoxReporter;
 use crate::token::{Token, Value};
 use crate::token_type::TokenType::{self, *};
 

@@ -7,7 +7,7 @@ use std::{
 use thiserror::Error;
 
 use crate::{
-    ast::Expr, ast_printer::AstPrinter, interpreter::{Interpreter, RuntimeError}, parser::parse, scanner::scan_tokens, token::Token, token_type::TokenType
+    ast::Expr, interpreter::{Interpreter, RuntimeError}, parser::parse, scanner::scan_tokens, token::Token, token_type::TokenType
 };
 
 #[derive(Debug, Error)]
@@ -33,7 +33,7 @@ impl LoxReporter {
     }
 
     pub(crate) fn runtime_error(&mut self, error: RuntimeError) {
-        eprintln!("{}", error);
+        eprintln!("{error}");
         self.had_runtime_error = true;
     }
 

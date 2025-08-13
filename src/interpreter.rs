@@ -6,7 +6,7 @@ use thiserror::Error;
 
 use crate::{
     ast::{Expr, Visitor},
-    lox::{Lox, LoxReporter},
+    lox::LoxReporter,
     token::{Token, Value},
     token_type::TokenType,
 };
@@ -42,7 +42,7 @@ impl Interpreter {
 
     pub fn interpret(&mut self, reporter: &mut LoxReporter, expression: &Expr) {
         match self.evaluate(expression) {
-            Ok(value) => println!("{}", value.to_string()),
+            Ok(value) => println!("{value}"),
             Err(error) => reporter.runtime_error(error),
         }
     }

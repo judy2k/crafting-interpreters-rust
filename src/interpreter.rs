@@ -5,7 +5,7 @@ use std::fmt::Display;
 use thiserror::Error;
 
 use crate::{
-    ast::{Expr, Stmt, ExprVisitor},
+    ast::{Expr, ExprVisitor, Stmt, StmtVisitor},
     lox::LoxReporter,
     token::{Token, Value},
     token_type::TokenType,
@@ -40,18 +40,16 @@ impl Interpreter {
         Default::default()
     }
 
-    pub fn execute(&mut self, reporter: &mut LoxReporter, statements: &Vec<Stmt>) {
-        // match self.evaluate(expression) {
-        //     Ok(value) => println!("{value}"),
-        //     Err(error) => reporter.runtime_error(error),
-        // }
-        unimplemented!()
+    pub fn execute(&mut self, reporter: &mut LoxReporter, stmt: &Stmt) -> Result<(), RuntimeError> {
+        self.visit_stmt(stmt)
     }
 
-    pub fn interpret(&mut self, reporter: &mut LoxReporter, expression: &Expr) {
-        match self.evaluate(expression) {
-            Ok(value) => println!("{value}"),
-            Err(error) => reporter.runtime_error(error),
+    pub fn interpret(&mut self, reporter: &mut LoxReporter, statements: &Vec<Stmt>) {
+        for statement in statements {
+            if let Err(error) = self.execute(reporter, statement) {
+                reporter.runtime_error(error);
+                return;
+            }
         }
     }
 
@@ -63,6 +61,18 @@ impl Interpreter {
 #[inline]
 fn number_operands_error(operator: &Token) -> RuntimeError {
     RuntimeError::new(operator.clone(), "Operands must be numbers.")
+}
+
+impl StmtVisitor<Result<(), RuntimeError>> for Interpreter {
+    fn visit_stmt(&self, stmt: &Stmt) -> Result<(), RuntimeError> {
+        match stmt {
+            Stmt::Expression(expression) => {
+                self.evaluate(expression)?;
+            }
+            Stmt::Print(expression) => println!("{}", self.evaluate(expression)?),
+        };
+        Ok(())
+    }
 }
 
 impl ExprVisitor<Result<Value, RuntimeError>> for Interpreter {

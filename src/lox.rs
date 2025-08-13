@@ -98,10 +98,7 @@ impl Lox {
 
     fn run(&mut self, code: &str) -> Result<(), LoxError> {
         let statements = self.parse_code(code)?;
-        self.interpreter.execute(
-            &mut self.reporter,
-            &statements,
-        );
+        self.interpreter.interpret(&mut self.reporter, &statements);
         Ok(())
     }
 

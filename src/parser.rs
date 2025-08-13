@@ -45,19 +45,19 @@ impl<'a> Parser<'a> {
         if self.token_match(&[Print]) {
             return self.print_statement();
         }
-        return self.expression_statement();
+        self.expression_statement()
     }
 
     fn print_statement(&mut self) -> StmtResult {
         let value = self.expression()?;
         self.consume(Semicolon, "Expect ';' after value.")?;
-        return Ok(Stmt::Print(value));
+        Ok(Stmt::Print(value))
     }
 
     fn expression_statement(&mut self) -> StmtResult {
         let expr = self.expression()?;
         self.consume(Semicolon, "Expect ';' after statement.")?;
-        return Ok(Stmt::Expression(expr));
+        Ok(Stmt::Expression(expr))
     }
 
     fn expression(&mut self) -> ExprResult {
@@ -220,7 +220,6 @@ mod tests {
 
     use super::Parser;
 
-
     fn parse_expression(expression: &str) -> (ExprResult, bool) {
         let mut reporter: LoxReporter = Default::default();
         let tokens = scan_tokens(&mut reporter, expression);
@@ -252,8 +251,7 @@ mod tests {
         assert_eq!(stmt, stmt2);
     }
 
-
-        #[test]
+    #[test]
     fn test_print_statement() {
         let stmt = "print 1 + 2;";
         let mut reporter: LoxReporter = Default::default();

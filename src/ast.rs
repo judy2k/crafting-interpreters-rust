@@ -42,7 +42,7 @@ impl Expr {
 }
 
 pub trait StmtVisitor<R> {
-    fn visit_stmt(&self, expr: &Expr) -> R;
+    fn visit_stmt(&self, stmt: &Stmt) -> R;
 }
 
 #[derive(Debug, PartialEq)]

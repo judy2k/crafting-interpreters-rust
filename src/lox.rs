@@ -1,17 +1,25 @@
 use std::{
     fs::read_to_string,
-    io::{self, Error, Write},
+    io::{self, Write},
     path::Path,
 };
 
+use thiserror::Error;
+
 use crate::{
-    ast::Expr, ast_printer::AstPrinter, parser::parse, scanner::scan_tokens, token::Token,
-    token_type::TokenType,
+    ast::Expr, ast_printer::AstPrinter, interpreter::RuntimeError, parser::parse, scanner::scan_tokens, token::Token, token_type::TokenType
 };
+
+#[derive(Debug, Error)]
+pub enum LoxError {
+    #[error(transparent)]
+    IOError(#[from] io::Error),
+}
 
 #[derive(Default, Debug)]
 pub struct Lox {
     pub had_error: bool,
+    pub had_runtime_error: bool,
 }
 
 impl Lox {
@@ -19,14 +27,23 @@ impl Lox {
         Default::default()
     }
 
-    pub fn run_file(&mut self, path: &Path) -> Result<(), Error> {
+    pub fn run_file(&mut self, path: &Path) -> Result<(), LoxError> {
         let code = read_to_string(path)?;
         self.run(&code);
+
+        if self.had_error {
+            std::process::exit(65);
+        }
+        
+        if self.had_runtime_error { 
+            std::process::exit(70);
+        }
+
 
         Ok(())
     }
 
-    pub fn run_prompt(&mut self) -> Result<(), Error> {
+    pub fn run_prompt(&mut self) -> Result<(), LoxError> {
         let mut buffer = String::new();
         let stdin = io::stdin();
         let mut stdout = io::stdout();
@@ -60,6 +77,11 @@ impl Lox {
     fn report(&mut self, line: usize, loc: &str, message: &str) {
         eprintln!("[line {line}] Error {loc} : {message}");
         self.had_error = true;
+    }
+
+    pub(crate) fn runtime_error(&mut self, error: RuntimeError) {
+        println!("{}", error);
+        self.had_runtime_error = true;
     }
 
     pub(crate) fn parse_error(&mut self, token: &Token, message: &str) {
